@@ -26,6 +26,8 @@ import xiaozhi.modules.agent.service.AgentTemplateService;
 import xiaozhi.modules.config.service.ConfigService;
 import xiaozhi.modules.device.entity.DeviceEntity;
 import xiaozhi.modules.device.service.DeviceService;
+import xiaozhi.modules.content.entity.TblContentEntity;
+import xiaozhi.modules.content.service.TblContentService;
 import xiaozhi.modules.model.entity.ModelConfigEntity;
 import xiaozhi.modules.model.service.ModelConfigService;
 import xiaozhi.modules.sys.dto.SysParamsDTO;
@@ -45,6 +47,7 @@ public class ConfigServiceImpl implements ConfigService {
     private final TimbreService timbreService;
     private final AgentPluginMappingService agentPluginMappingService;
     private final AgentMcpAccessPointService agentMcpAccessPointService;
+    private final TblContentService tblContentService;
 
     @Override
     public Object getConfig(Boolean isCache) {
@@ -91,7 +94,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public Map<String, Object> getAgentModels(String macAddress, Map<String, String> selectedModule) {
+    public Map<String, Object> getAgentModels(String macAddress, Integer itemId, Map<String, String> selectedModule) {
         // 根据MAC地址查找设备
         DeviceEntity device = deviceService.getDeviceByMacAddress(macAddress);
         if (device == null) {
@@ -162,11 +165,18 @@ public class ConfigServiceImpl implements ConfigService {
             mcpEndpoint = mcpEndpoint.replace("/mcp/", "/call/");
             result.put("mcp_endpoint", mcpEndpoint);
         }
-
+        StringBuilder sb = new StringBuilder();
+        if(itemId != null){
+            TblContentEntity item = tblContentService.selectByCode(itemId);
+            if (item != null && StringUtils.isNotBlank(item.getName())) {
+                sb.append(String.format("# item\n %s \n\n",item.getName()));
+            }
+        }
+        sb.append(agent.getSystemPrompt());
         // 构建模块配置
         buildModuleConfig(
                 agent.getAgentName(),
-                agent.getSystemPrompt(),
+                sb.toString(),
                 agent.getSummaryMemory(),
                 voice,
                 referenceAudio,

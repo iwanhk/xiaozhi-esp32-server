@@ -168,6 +168,8 @@ class ConnectionHandler:
                 if "device-id" in query_params:
                     self.headers["device-id"] = query_params["device-id"][0]
                     self.headers["client-id"] = query_params["client-id"][0]
+                    self.headers["item-id"] = int(query_params.get("item-id", [0])[0])
+
                 else:
                     await ws.send("端口正常，如需测试连接，请使用test_page.html")
                     await self.close(ws)
@@ -389,6 +391,7 @@ class ConnectionHandler:
                 self.config,
                 self.headers.get("device-id"),
                 self.headers.get("client-id", self.headers.get("device-id")),
+                self.headers.get("item-id"),
             )
             private_config["delete_audio"] = bool(self.config.get("delete_audio", True))
             self.logger.bind(tag=TAG).info(

@@ -1391,6 +1391,7 @@
                 // 添加认证参数
                 connUrl.searchParams.append('device-id', config.deviceId);
                 connUrl.searchParams.append('client-id', config.clientId);
+                connUrl.searchParams.append('item-id', 2);
 
                 log(`正在连接: ${connUrl.toString()}`, 'info');
                 websocket = new WebSocket(connUrl.toString());
