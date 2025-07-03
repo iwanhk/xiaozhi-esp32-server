@@ -32,6 +32,8 @@ import xiaozhi.modules.agent.vo.AgentVoicePrintVO;
 import xiaozhi.modules.config.service.ConfigService;
 import xiaozhi.modules.device.entity.DeviceEntity;
 import xiaozhi.modules.device.service.DeviceService;
+import xiaozhi.modules.content.entity.TblContentEntity;
+import xiaozhi.modules.content.service.TblContentService;
 import xiaozhi.modules.model.entity.ModelConfigEntity;
 import xiaozhi.modules.model.service.ModelConfigService;
 import xiaozhi.modules.sys.dto.SysParamsDTO;
@@ -52,6 +54,7 @@ public class ConfigServiceImpl implements ConfigService {
     private final AgentPluginMappingService agentPluginMappingService;
     private final AgentMcpAccessPointService agentMcpAccessPointService;
     private final AgentVoicePrintDao agentVoicePrintDao;
+    private final TblContentService tblContentService;
 
     @Override
     public Object getConfig(Boolean isCache) {
@@ -98,7 +101,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public Map<String, Object> getAgentModels(String macAddress, Map<String, String> selectedModule) {
+    public Map<String, Object> getAgentModels(String macAddress, Integer itemId, Map<String, String> selectedModule) {
         // 根据MAC地址查找设备
         DeviceEntity device = deviceService.getDeviceByMacAddress(macAddress);
         if (device == null) {
@@ -172,10 +175,18 @@ public class ConfigServiceImpl implements ConfigService {
         // 获取声纹信息
         buildVoiceprintConfig(agent.getId(), result);
 
+        StringBuilder sb = new StringBuilder();
+        if(itemId != null){
+            TblContentEntity item = tblContentService.selectByCode(itemId);
+            if (item != null && StringUtils.isNotBlank(item.getName())) {
+                sb.append(String.format("# item\n %s \n\n",item.getName()));
+            }
+        }
+        sb.append(agent.getSystemPrompt());
         // 构建模块配置
         buildModuleConfig(
                 agent.getAgentName(),
-                agent.getSystemPrompt(),
+                sb.toString(),
                 agent.getSummaryMemory(),
                 voice,
                 referenceAudio,
@@ -266,7 +277,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     /**
      * 构建声纹配置信息
-     * 
+     *
      * @param agentId 智能体ID
      * @param result  结果Map
      */
@@ -298,7 +309,7 @@ public class ConfigServiceImpl implements ConfigService {
             Map<String, Object> voiceprintConfig = new HashMap<>();
             voiceprintConfig.put("url", voiceprintUrl);
             voiceprintConfig.put("speakers", speakers);
-            
+
             // 获取声纹识别相似度阈值，默认0.4
             String thresholdStr = sysParamsService.getValue("server.voiceprint_similarity_threshold", true);
             if (StringUtils.isNotBlank(thresholdStr) && !"null".equals(thresholdStr)) {
@@ -322,7 +333,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     /**
      * 获取智能体关联的声纹信息
-     * 
+     *
      * @param agentId 智能体ID
      * @return 声纹信息列表
      */

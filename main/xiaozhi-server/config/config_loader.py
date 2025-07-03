@@ -71,9 +71,9 @@ def get_config_from_api(config):
     return config_data
 
 
-def get_private_config_from_api(config, device_id, client_id):
+def get_private_config_from_api(config, device_id, client_id, item_id=0):
     """从Java API获取私有配置"""
-    return get_agent_models(device_id, client_id, config["selected_module"])
+    return get_agent_models(device_id, client_id, config["selected_module"], item_id)
 
 
 def ensure_directories(config):
