@@ -1,16 +1,19 @@
 package xiaozhi.modules.agent.entity;
 
 import java.util.Date;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@TableName("ai_agent")
+@TableName(value = "ai_agent", autoResultMap = true)
 @Schema(description = "智能体信息")
 public class AgentEntity {
 
@@ -53,6 +56,10 @@ public class AgentEntity {
 
     @Schema(description = "聊天记录配置（0不记录 1仅记录文本 2记录文本和语音）")
     private Integer chatHistoryConf;
+
+    @Schema(description = "ragflow知识库ID列表")
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> ragflowDatasets;    
 
     @Schema(description = "角色设定参数")
     private String systemPrompt;

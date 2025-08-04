@@ -21,4 +21,8 @@ public class AgentInfoVO extends AgentEntity
     @Schema(description = "插件列表Id")
     @TableField(typeHandler = JacksonTypeHandler.class)
     private List<AgentPluginMapping> functions;
+
+    @Schema(description = "Ragflow数据集ID列表")
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> ragflowDatasets;
 }

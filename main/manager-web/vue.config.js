@@ -44,7 +44,8 @@ module.exports = defineConfig({
     port: 8001, // 指定端口为 8001
     proxy: {
       '/xiaozhi': {
-        target: 'http://127.0.0.1:8002',
+ //       target: 'http://127.0.0.1:8002',
+        target: 'http://10.21.129.100:8002',
         changeOrigin: true
       }
     },

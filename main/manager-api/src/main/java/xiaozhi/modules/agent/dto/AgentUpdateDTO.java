@@ -50,6 +50,9 @@ public class AgentUpdateDTO implements Serializable {
     @Schema(description = "插件函数信息", nullable = true)
     private List<FunctionInfo> functions;
 
+    @Schema(description = "ragflow知识库", example = "[\"id1\", \"id2\"]", nullable = true)
+    private List<String> ragflowDatasets;    
+
     @Schema(description = "角色设定参数", example = "你是一个专业的客服助手，负责回答用户问题并提供帮助", nullable = true)
     private String systemPrompt;
 

@@ -84,6 +84,7 @@ public class ConfigServiceImpl implements ConfigService {
                 null,
                 null,
                 null,
+                null,
                 result,
                 isCache);
 
@@ -188,6 +189,7 @@ public class ConfigServiceImpl implements ConfigService {
                 agent.getTtsModelId(),
                 agent.getMemModelId(),
                 agent.getIntentModelId(),
+                agent.getRagflowDatasets(),
                 result,
                 true);
 
@@ -294,6 +296,7 @@ public class ConfigServiceImpl implements ConfigService {
             String ttsModelId,
             String memModelId,
             String intentModelId,
+            List<String> RagflowDatasets,
             Map<String, Object> result,
             boolean isCache) {
         Map<String, String> selectedModule = new HashMap<>();
@@ -373,5 +376,6 @@ public class ConfigServiceImpl implements ConfigService {
         }
         result.put("prompt", prompt);
         result.put("summaryMemory", summaryMemory);
+        result.put("ragflowDatasets", RagflowDatasets);
     }
 }

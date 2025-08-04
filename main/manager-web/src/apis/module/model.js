@@ -320,5 +320,23 @@ export default {
           this.getPluginFunctionList(params, callback)
         })
       }).send()
-  }
+  },
+  getRagDatasets(callback) {
+    RequestService.sendRequest()
+      .url(`${getServiceUrl()}/ragflow/datasets`)
+      .method('GET')
+      .success((res) => {
+        RequestService.clearRequestTime();
+        const list = res.data?.data || [];
+        if (callback) callback(list);
+      })
+      .networkFail((err) => {
+        console.error('获取知识库列表失败:', err);
+        this.$message.error('获取知识库列表失败');
+        RequestService.reAjaxFun(() => {
+          this.getRagDatasets(callback);
+        });
+      })
+      .send();
+  }  
 }

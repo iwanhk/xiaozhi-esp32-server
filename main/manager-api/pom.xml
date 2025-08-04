@@ -18,6 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
+        <fastjson2.version>2.0.58</fastjson2.version>
         <junit.version>5.10.1</junit.version>
         <druid.version>1.2.20</druid.version>
         <mybatisplus.version>3.5.5</mybatisplus.version>
@@ -33,6 +34,13 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>${fastjson2.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>

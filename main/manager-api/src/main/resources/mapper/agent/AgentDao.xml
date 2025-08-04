@@ -23,6 +23,8 @@
                 typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
 
         <result column="chatHistoryConf" property="chatHistoryConf"/>
+        <result column="ragflowDatasets" property="ragflowDatasets"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
         <result column="systemPrompt" property="systemPrompt"/>
         <result column="summaryMemory" property="summaryMemory"/>
         <result column="langCode" property="langCode"/>
@@ -61,6 +63,7 @@
                        JSON_ARRAY()
                )                   AS functions,
                a.chat_history_conf AS chatHistoryConf,
+               a.ragflow_datasets  AS ragflowDatasets,
                a.system_prompt     AS systemPrompt,
                a.summary_memory    AS summaryMemory,
                a.lang_code         AS langCode,

@@ -1,6 +1,7 @@
 package xiaozhi.modules.agent.dto;
 
 import java.util.Date;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -32,6 +33,9 @@ public class AgentDTO {
 
     @Schema(description = "记忆模型ID", example = "mem_model_01")
     private String memModelId;
+
+    @Schema(description = "ragflow知识库", example = "[\"id1\",\"id2\"]")
+    private List<String> ragflowDatasets;
 
     @Schema(description = "角色设定参数", example = "你是一个专业的客服助手，负责回答用户问题并提供帮助")
     private String systemPrompt;

@@ -122,6 +122,11 @@
                           :value="item.value" />
                       </el-select>
                     </el-form-item>
+                    <el-form-item label="知识库">
+                      <el-select v-model="form.ragflowDatasets" multiple placeholder="请选择知识库" class="form-select" :loading="datasetLoading">
+                        <el-option v-for="(item, index) in datasetOptions" :key="`dataset-${index}`" :label="item.label" :value="item.value" />
+                      </el-select>
+                    </el-form-item>
                   </div>
                 </div>
               </div>
@@ -150,6 +155,7 @@ export default {
         agentCode: "",
         agentName: "",
         ttsVoiceId: "",
+        ragflowDatasets: [], // 初始化为空数组
         chatHistoryConf: 0,
         systemPrompt: "",
         summaryMemory: "",
@@ -179,6 +185,8 @@ export default {
       templates: [],
       loadingTemplate: false,
       voiceOptions: [],
+      datasetOptions: [], // 知识库选项
+      datasetLoading: false, // 知识库加载状态
       showFunctionDialog: false,
       currentFunctions: [],
       functionColorMap: [
@@ -203,6 +211,7 @@ export default {
         vllmModelId: this.form.model.vllmModelId,
         ttsModelId: this.form.model.ttsModelId,
         ttsVoiceId: this.form.ttsVoiceId,
+        ragflowDatasets: this.form.ragflowDatasets,
         chatHistoryConf: this.form.chatHistoryConf,
         memModelId: this.form.model.memModelId,
         intentModelId: this.form.model.intentModelId,
@@ -299,6 +308,7 @@ export default {
         ...this.form,
         agentName: templateData.agentName || this.form.agentName,
         ttsVoiceId: templateData.ttsVoiceId || this.form.ttsVoiceId,
+        ragflowDatasets: templateData.ragflowDatasets || this.form.ragflowDatasets,
         chatHistoryConf: templateData.chatHistoryConf || this.form.chatHistoryConf,
         systemPrompt: templateData.systemPrompt || this.form.systemPrompt,
         summaryMemory: templateData.summaryMemory || this.form.summaryMemory,
@@ -391,6 +401,29 @@ export default {
           this.voiceOptions = [];
         }
       });
+    },
+    fetchDatasetOptions() {
+      this.datasetLoading = true;
+      Api.model.getRagDatasets((list) => {
+        this.datasetLoading = false;
+        if (Array.isArray(list)) {
+          this.datasetOptions = list.map(item => ({
+            value: item.id,
+            label: item.name,
+          }));
+        } else {
+          this.datasetOptions = [];
+          this.$message.warning('未获取到有效的知识库数据');
+        }
+      }, (error) => {
+        this.datasetLoading = false;
+        this.datasetOptions = [];
+        this.$message.error('获取知识库数据失败');
+        console.error('获取知识库列表失败:', error);
+      });
+    },
+    handleDatasetChange(selectedIds) {
+      console.log('Selected dataset IDs:', selectedIds);
     },
     getFunctionColor(name) {
       const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -485,11 +518,19 @@ export default {
     }
     this.fetchModelOptions();
     this.fetchTemplates();
+    this.fetchDatasetOptions();
   }
 }
 </script>
 
 <style scoped>
+::v-deep .el-select .el-tag {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .welcome {
   min-width: 900px;
   height: 100vh;

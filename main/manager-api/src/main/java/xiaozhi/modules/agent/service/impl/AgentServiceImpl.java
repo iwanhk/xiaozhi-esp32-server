@@ -237,6 +237,9 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
         if (dto.getIntentModelId() != null) {
             existingEntity.setIntentModelId(dto.getIntentModelId());
         }
+        if (dto.getRagflowDatasets() != null) {
+            existingEntity.setRagflowDatasets(dto.getRagflowDatasets());
+        }
         if (dto.getSystemPrompt() != null) {
             existingEntity.setSystemPrompt(dto.getSystemPrompt());
         }

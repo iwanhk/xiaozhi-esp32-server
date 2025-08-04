@@ -97,6 +97,16 @@ public interface Constant {
     String SERVER_OTA = "server.ota";
 
     /**
+     * ragflow地址
+     */
+    String RAGFLOW_API = "ragflow.api";
+
+    /**
+     * ragflow秘钥
+     */
+    String RAGFLOW_TOKEN = "ragflow.token";
+
+    /**
      * 是否允许用户注册
      */
     String SERVER_ALLOW_USER_REGISTER = "server.allow_user_register";
