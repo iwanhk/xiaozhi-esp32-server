@@ -67,7 +67,7 @@ class LLMProvider(LLMProviderBase):
             logger.bind(tag=TAG).error(f"Error in response generation: {e}")
             yield "【服务响应异常】"
 
-    def response_with_functions(self, session_id, dialogue, functions=None, datasets=None):
+    def response_with_functions(self, session_id, dialogue, functions=None):
         logger.bind(tag=TAG).error(
             f"fastgpt暂未实现完整的工具调用（function call），建议使用其他意图识别"
         )
