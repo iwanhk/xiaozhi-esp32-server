@@ -170,7 +170,7 @@ public class ConfigServiceImpl implements ConfigService {
         if(itemId != null){
             TblContentEntity item = tblContentService.selectByCode(itemId);
             if (item != null && StringUtils.isNotBlank(item.getName())) {
-                sb.append(String.format("# item\n %s \n\n",item.getName()));
+                sb.append(String.format("# 当前展品\n %s \n\n",item.getName()));
             }
         }
         sb.append(agent.getSystemPrompt());
