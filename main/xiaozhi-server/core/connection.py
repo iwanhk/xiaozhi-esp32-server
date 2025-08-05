@@ -26,6 +26,7 @@ from core.handle.reportHandle import report
 from core.providers.tts.default import DefaultTTS
 from concurrent.futures import ThreadPoolExecutor
 from core.utils.dialogue import Message, Dialogue
+from core.utils.ragflow import RAGContextProvider
 from core.providers.asr.dto.dto import InterfaceType
 from core.handle.textHandle import handleTextMessage
 from core.providers.tools.unified_tool_handler import UnifiedToolHandler
@@ -463,6 +464,8 @@ class ConnectionHandler:
                 ] = plugin_from_server.keys()
         if private_config.get("prompt", None) is not None:
             self.config["prompt"] = private_config["prompt"]
+        if private_config.get("ragflowDatasets", None) is not None:
+            self.config["ragflowDatasets"] = private_config["ragflowDatasets"]
         if private_config.get("summaryMemory", None) is not None:
             self.config["summaryMemory"] = private_config["summaryMemory"]
         if private_config.get("device_max_output_size", None) is not None:
@@ -598,6 +601,28 @@ class ConnectionHandler:
         self.logger.bind(tag=TAG).info(f"大模型收到用户消息: {query}")
         self.llm_finish_task = False
 
+        ragflow_dict = self.config.get("ragflow", None)
+        dataset_ids  = self.config.get("ragflowDatasets", None)
+
+        if ragflow_dict:
+            ragflow_enable = ragflow_dict.get("enable", False)
+            ragflow_api    = ragflow_dict.get("api", None)
+            ragflow_token  = ragflow_dict.get("token", None)
+            ragflow_topk   = ragflow_dict.get("topk", 10)
+
+        self.logger.bind(tag=TAG).info(f"RAGFlow 配置: {ragflow_enable}, {ragflow_api}, {ragflow_token}, {ragflow_topk}, {dataset_ids}")
+        if all([ragflow_enable, ragflow_api, ragflow_token, ragflow_topk, dataset_ids]):
+            rag = RAGContextProvider(
+                api=ragflow_api,
+                token=ragflow_token,
+                topk=ragflow_topk
+            )
+
+            chunks = rag.retrieve_knowledge_context(query, dataset_ids)
+            if chunks:
+                query = f"请根据以下资料回答问题:\n---\n{chunks}\n---\n问题是: {query}"
+                self.logger.bind(tag=TAG).info(f"RAGFlow 功能已启用，消息内容:\n {query}")
+        
         if not tool_call:
             self.dialogue.put(Message(role="user", content=query))
 
@@ -623,7 +648,7 @@ class ConnectionHandler:
                 llm_responses = self.llm.response_with_functions(
                     self.session_id,
                     self.dialogue.get_llm_dialogue_with_memory(memory_str),
-                    functions=functions,
+                    functions=functions
                 )
             else:
                 llm_responses = self.llm.response(
