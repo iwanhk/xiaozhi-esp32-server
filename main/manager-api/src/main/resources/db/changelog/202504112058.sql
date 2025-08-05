@@ -59,3 +59,7 @@ INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, r
 INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (430, 'plugins.play_music.music_dir', './music', 'string', 1, '音乐文件存放路径');
 INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (431, 'plugins.play_music.music_ext', 'mp3;wav;p3', 'array', 1, '音乐文件类型');
 INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (432, 'plugins.play_music.refresh_time', '300', 'number', 1, '音乐列表刷新间隔(秒)');
+INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (800, 'ragflow.api', 'http://127.0.0.1/', 'string', 1, 'RAGFLOW接口地址');
+INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (801, 'ragflow.token', 'ragflow-E3ZWQExZjBiNjdjMDI0Mj', 'string', 1, 'RAGFLOW认证token');
+INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (802, 'ragflow.topk', '10', 'number', 1, '检索时取前 K 个最相关的文档');
+INSERT INTO `sys_params` (id, param_code, param_value, value_type, param_type, remark) VALUES (803, 'ragflow.enable', 'false', 'boolean', 1, '是否启用RAGFLOW');

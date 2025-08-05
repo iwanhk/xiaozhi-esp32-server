@@ -93,6 +93,7 @@ CREATE TABLE `ai_agent` (
     `tts_voice_id` VARCHAR(32) COMMENT '音色标识',
     `mem_model_id` VARCHAR(32) COMMENT '记忆模型标识',
     `intent_model_id` VARCHAR(32) COMMENT '意图模型标识',
+    `ragflow_datasets` TEXT COMMENT 'ragflow知识库',
     `system_prompt` TEXT COMMENT '角色设定参数',
     `lang_code` VARCHAR(10) COMMENT '语言编码',
     `language` VARCHAR(10) COMMENT '交互语种',
