@@ -3,10 +3,11 @@ from typing import List
 
 
 class RAGContextProvider:
-    def __init__(self, api: str, token: str, topk: int = 5):
+    def __init__(self, api: str, token: str, topk: int = 5, timeout: int = 5):
         self.api = api.rstrip("/")
         self.token = token
         self.topk = topk
+        self.timeout = timeout
 
     def retrieve_knowledge_context(self, question: str, dataset_ids: List[str]) -> List[str]:
 
@@ -26,7 +27,7 @@ class RAGContextProvider:
                 url,
                 json=payload,
                 headers=headers,
-                timeout=2,
+                timeout=self.timeout,
                 verify=False
             )
 

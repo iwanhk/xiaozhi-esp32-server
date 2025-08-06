@@ -605,17 +605,19 @@ class ConnectionHandler:
         dataset_ids  = self.config.get("ragflowDatasets", None)
 
         if ragflow_dict:
-            ragflow_enable = ragflow_dict.get("enable", False)
-            ragflow_api    = ragflow_dict.get("api", None)
-            ragflow_token  = ragflow_dict.get("token", None)
-            ragflow_topk   = ragflow_dict.get("topk", 10)
+            ragflow_enable  = ragflow_dict.get("enable", False)
+            ragflow_api     = ragflow_dict.get("api", None)
+            ragflow_token   = ragflow_dict.get("token", None)
+            ragflow_topk    = ragflow_dict.get("topk", 10)
+            ragflow_timeout = ragflow_dict.get("timeout", 5)
 
-        self.logger.bind(tag=TAG).info(f"RAGFlow 配置: {ragflow_enable}, {ragflow_api}, {ragflow_token}, {ragflow_topk}, {dataset_ids}")
+        self.logger.bind(tag=TAG).info(f"RAGFlow 配置: {ragflow_enable}, {ragflow_api}, {ragflow_token}, {ragflow_topk}, {dataset_ids}, {ragflow_timeout}")
         if all([ragflow_enable, ragflow_api, ragflow_token, ragflow_topk, dataset_ids]):
             rag = RAGContextProvider(
                 api=ragflow_api,
                 token=ragflow_token,
-                topk=ragflow_topk
+                topk=ragflow_topk,
+                timeout=ragflow_timeout
             )
 
             chunks = rag.retrieve_knowledge_context(query, dataset_ids)
