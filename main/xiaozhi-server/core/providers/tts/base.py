@@ -203,6 +203,18 @@ class TTSProviderBase(ABC):
         )
         self.audio_play_priority_thread.start()
 
+    def _apply_text_filter(self, text: str) -> str:
+        """
+        在此方法中应用您的文本过滤逻辑。
+        此过滤器会移除所有以 "http://" 或 "https://" 开头的 URL。
+        URL 被定义为以 "http://" 或 "https://" 开头，并持续到第一个非英语（非ASCII可打印）字符或空格。
+        """
+        if not text:
+            return text
+        # 使用正则表达式移除URL。[\x21-\x7E] 匹配所有可打印的ASCII字符（不包括空格）。
+        text = re.sub(r"https?://[\x21-\x7E]+", "", text)
+        return text
+
     # 这里默认是非流式的处理方式
     # 流式处理方式请在子类中重写
     def tts_text_priority_thread(self):
@@ -223,6 +235,7 @@ class TTSProviderBase(ABC):
                     self.tts_text_buff.append(message.content_detail)
                     segment_text = self._get_segment_text()
                     if segment_text:
+                        segment_text = self._apply_text_filter(segment_text)
                         if self.delete_audio_file:
                             audio_datas = self.to_tts(segment_text)
                             if audio_datas:
@@ -380,6 +393,7 @@ class TTSProviderBase(ABC):
         if remaining_text:
             segment_text = textUtils.get_string_no_punctuation_or_emoji(remaining_text)
             if segment_text:
+                segment_text = self._apply_text_filter(segment_text)
                 if self.delete_audio_file:
                     audio_datas = self.to_tts(segment_text)
                     if audio_datas:
