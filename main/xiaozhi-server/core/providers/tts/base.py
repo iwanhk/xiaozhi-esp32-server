@@ -12,6 +12,7 @@ from config.logger import setup_logging
 from core.utils.util import audio_to_data, audio_bytes_to_data
 from core.utils.tts import MarkdownCleaner
 from core.utils.output_counter import add_device_output
+from core.utils.tts_limiter import check_and_update_usage
 from core.handle.reportHandle import enqueue_tts_report
 from core.handle.sendAudioHandle import sendAudioMessage
 from core.providers.tts.dto.dto import (
@@ -236,6 +237,13 @@ class TTSProviderBase(ABC):
                     segment_text = self._get_segment_text()
                     if segment_text:
                         segment_text = self._apply_text_filter(segment_text)
+                        
+                        # 检查TTS字符数限制
+                        device_id = self.conn.headers.get("device-id")
+                        if not check_and_update_usage(device_id, len(segment_text)):
+                            logger.bind(tag=TAG).warning(f"Device {device_id} TTS limit exceeded, skipping TTS for: {segment_text}")
+                            continue
+
                         if self.delete_audio_file:
                             audio_datas = self.to_tts(segment_text)
                             if audio_datas:
@@ -394,6 +402,13 @@ class TTSProviderBase(ABC):
             segment_text = textUtils.get_string_no_punctuation_or_emoji(remaining_text)
             if segment_text:
                 segment_text = self._apply_text_filter(segment_text)
+                
+                # 检查TTS字符数限制
+                device_id = self.conn.headers.get("device-id")
+                if not check_and_update_usage(device_id, len(segment_text)):
+                    logger.bind(tag=TAG).warning(f"Device {device_id} TTS limit exceeded, skipping TTS for: {segment_text}")
+                    return False
+
                 if self.delete_audio_file:
                     audio_datas = self.to_tts(segment_text)
                     if audio_datas:
