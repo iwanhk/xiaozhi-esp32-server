@@ -47,15 +47,33 @@ class ASRProvider(ASRProviderBase):
         
         self.interface_type = InterfaceType.LOCAL
         self.model_dir = config.get("model_dir")
-        self.output_dir = config.get("output_dir")  # 修正配置键名
+        self.output_dir = config.get("output_dir")
         self.delete_audio_file = delete_audio_file
+        hotwords_file = config.get("hotwords_file")
 
+        hotwords_str = ""
+        if hotwords_file and os.path.exists(hotwords_file):
+            try:
+                with open(hotwords_file, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                
+                processed_lines = []
+                for line in lines:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        processed_lines.append(line)
+                hotwords_str = " ".join(processed_lines)
+                logger.bind(tag=TAG).info(f"成功加载热词文件: {hotwords_file} | 内容: {hotwords_str}")
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"读取热词文件 {hotwords_file} 失败: {e}")
+        
         # 确保输出目录存在
         os.makedirs(self.output_dir, exist_ok=True)
         with CaptureOutput():
             self.model = AutoModel(
                 model=self.model_dir,
                 vad_kwargs={"max_single_segment_time": 30000},
+                hotword=hotwords_str,
                 disable_update=True,
                 hub="hf",
                 # device="cuda:0",  # 启用GPU加速
