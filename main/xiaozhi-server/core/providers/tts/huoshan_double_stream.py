@@ -157,6 +157,7 @@ class TTSProvider(TTSProviderBase):
         self.header = {"Authorization": f"{self.authorization}{self.access_token}"}
         self.enable_two_way = True
         self.tts_text = ""
+        self.in_url = False  # Flag to track if we are inside a URL
         self.opus_encoder = opus_encoder_utils.OpusEncoderUtils(
             sample_rate=16000, channels=1, frame_size_ms=60
         )
@@ -268,6 +269,48 @@ class TTSProvider(TTSProviderBase):
                 )
                 continue
 
+    def remove_url(self, text: str) -> str:
+        """
+        从文本流中删除 URL，处理跨块分割的 URL。
+        """
+        result = ''
+        temp_text = text
+        
+        if self.in_url:
+            # We were in a URL from the previous chunk
+            space_index = temp_text.find(' ')
+            if space_index != -1:
+                # URL ends in this chunk
+                self.in_url = False
+                temp_text = temp_text[space_index+1:]
+            else:
+                # The whole chunk is part of a URL
+                return ""
+
+        while "http://" in temp_text or "https://" in temp_text:
+            http_index = temp_text.find("http://")
+            https_index = temp_text.find("https://")
+
+            if http_index != -1 and (https_index == -1 or http_index < https_index):
+                start_index = http_index
+            else:
+                start_index = https_index
+
+            result += temp_text[:start_index]
+            
+            space_index = temp_text.find(' ', start_index)
+            
+            if space_index != -1:
+                # URL is complete within this chunk
+                temp_text = temp_text[space_index+1:]
+            else:
+                # URL is incomplete, spans to the next chunk
+                self.in_url = True
+                return result
+        
+        result += temp_text
+        return result
+
     async def text_to_speak(self, text, _):
         """发送文本到TTS服务"""
         try:
@@ -279,8 +322,12 @@ class TTSProvider(TTSProviderBase):
             #  过滤Markdown
             filtered_text = MarkdownCleaner.clean_markdown(text)
 
+            # 过滤URL
+            filtered_text = self.remove_url(filtered_text)
+
             # 发送文本
-            await self.send_text(self.voice, filtered_text, self.conn.sentence_id)
+            if filtered_text:
+                await self.send_text(self.voice, filtered_text, self.conn.sentence_id)
             return
         except Exception as e:
             logger.bind(tag=TAG).error(f"发送TTS文本失败: {str(e)}")

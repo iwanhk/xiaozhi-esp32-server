@@ -1,17 +1,22 @@
 import threading
 from config.logger import setup_logging
+from config.config_loader import load_config
 
 # 设置日志
 logger = setup_logging()
 TAG = "TTSLimiter"
+
+# 加载配置
+config = load_config()
 
 # 线程安全的字典，用于存储每个设备的TTS使用情况
 # 格式: { "device_id": character_count }
 tts_usage = {}
 lock = threading.Lock()
 
-# TTS字符数限制
-TTS_CHAR_LIMIT = 10000
+# 从配置中获取TTS字符数限制，如果未配置则默认为10000
+TTS_CHAR_LIMIT = config.get("server", {}).get("tts_char_limit", 10000)
+
 
 def check_and_update_usage(device_id: str, text_length: int) -> bool:
     """
