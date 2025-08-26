@@ -103,6 +103,7 @@ async def sendAudio(conn, audios, pre_buffer=True):
             await asyncio.sleep(delay)
 
         await conn.websocket.send(opus_packet)
+        conn.logger.bind(tag=TAG).debug(f"成功发送TTS语音包到前端，大小: {len(opus_packet)} bytes, session_id: {conn.session_id}")
 
         play_position += frame_duration
 

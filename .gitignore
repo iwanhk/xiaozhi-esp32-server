@@ -174,3 +174,6 @@ main/xiaozhi-server/mysql
 uploadfile
 *.json
 .vscode
+
+data/
+*.pt
