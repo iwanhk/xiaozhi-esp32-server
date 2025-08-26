@@ -485,22 +485,23 @@ class TTSProvider(TTSProviderBase):
                         res.optional.event == EVENT_TTSResponse
                         and res.header.message_type == AUDIO_ONLY_RESPONSE
                     ):
-                        logger.bind(tag=TAG).debug(f"推送数据到队列里面～～")
-                        opus_datas = self.wav_to_opus_data_audio_raw(res.payload)
-                        logger.bind(tag=TAG).debug(
-                            f"推送数据到队列里面帧数～～{len(opus_datas)}"
-                        )
-                        if is_first_sentence:
-                            first_sentence_segment_count += 1
-                            if first_sentence_segment_count <= 6:
-                                self.tts_audio_queue.put(
-                                    (SentenceType.MIDDLE, opus_datas, None)
-                                )
+                        if res.payload:
+                            audio_size = len(res.payload)
+                            logger.bind(tag=TAG).debug(f"豆包TTS: 成功接收到音频数据，大小: {audio_size}")
+                            opus_datas = self.wav_to_opus_data_audio_raw(res.payload)
+                            if is_first_sentence:
+                                first_sentence_segment_count += 1
+                                if first_sentence_segment_count <= 6:
+                                    self.tts_audio_queue.put(
+                                        (SentenceType.MIDDLE, opus_datas, None)
+                                    )
+                                else:
+                                    opus_datas_cache = opus_datas_cache + opus_datas
                             else:
+                                # 后续句子缓存
                                 opus_datas_cache = opus_datas_cache + opus_datas
                         else:
-                            # 后续句子缓存
-                            opus_datas_cache = opus_datas_cache + opus_datas
+                            logger.bind(tag=TAG).debug("豆包TTS: 接收到空的音频数据，可能丢失语音")
                     elif res.optional.event == EVENT_TTSSentenceEnd:
                         logger.bind(tag=TAG).info(f"句子语音生成成功：{self.tts_text}")
                         if not is_first_sentence or first_sentence_segment_count > 10:
