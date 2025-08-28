@@ -146,7 +146,7 @@ class ASRProvider(ASRProviderBase):
     ) -> Optional[str]:
         """Send request to Volcano ASR service."""
         try:
-            auth_header = {"Authorization": "Bearer; {}".format(self.access_token)}
+            auth_header = {"Authorization": "Bearer {}".format(self.access_token)}
             async with websockets.connect(
                 self.ws_url, additional_headers=auth_header
             ) as websocket:
