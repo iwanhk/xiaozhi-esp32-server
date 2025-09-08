@@ -75,9 +75,8 @@ class AccessToken:
             if key in root_obj:
                 token = root_obj[key]["Id"]
                 expire_time = root_obj[key]["ExpireTime"]
-                return token, expire_time
-        # print(response.text)
-        return None, None
+                return token, expire_time, None
+        return None, None, response.text
 
 
 class TTSProvider(TTSProviderBase):
@@ -124,11 +123,11 @@ class TTSProvider(TTSProviderBase):
     def _refresh_token(self):
         """刷新Token并记录过期时间"""
         if self.access_key_id and self.access_key_secret:
-            self.token, expire_time_str = AccessToken.create_token(
+            self.token, expire_time_str, error_msg = AccessToken.create_token(
                 self.access_key_id, self.access_key_secret
             )
             if not expire_time_str:
-                raise ValueError("无法获取有效的Token过期时间")
+                raise ValueError(f"无法获取有效的Token过期时间: {error_msg}")
 
             try:
                 # 统一转换为字符串处理

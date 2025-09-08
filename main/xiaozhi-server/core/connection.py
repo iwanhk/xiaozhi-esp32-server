@@ -598,6 +598,11 @@ class ConnectionHandler:
         self.dialogue.update_system_message(self.prompt)
 
     def chat(self, query, tool_call=False):
+        if not self.llm:
+            self.logger.bind(tag=TAG).error("LLM not initialized, cannot process chat message.")
+            self.tts.tts_one_sentence(self, ContentType.TEXT, content_detail="抱歉，大语言模型还未准备好，请稍后再试。")
+            self.llm_finish_task = True
+            return None
         self.logger.bind(tag=TAG).info(f"大模型收到用户消息: {query}")
         self.llm_finish_task = False
 
