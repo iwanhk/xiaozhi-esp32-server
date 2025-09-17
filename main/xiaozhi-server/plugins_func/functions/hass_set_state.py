@@ -50,18 +50,22 @@ hass_set_state_function_desc = {
 
 
 @register_function("hass_set_state", hass_set_state_function_desc, ToolType.SYSTEM_CTL)
-def hass_set_state(conn, entity_id="", state={}):
+def hass_set_state(conn, entity_id="", state=None):
+    if state is None:
+        state = {}
     try:
-        future = asyncio.run_coroutine_threadsafe(
-            handle_hass_set_state(conn, entity_id, state), conn.loop
-        )
-        ha_response = future.result()
+        ha_response = handle_hass_set_state(conn, entity_id, state)
         return ActionResponse(Action.REQLLM, ha_response, None)
+    except asyncio.TimeoutError:
+        logger.bind(tag=TAG).error("设置Home Assistant状态超时")
+        return ActionResponse(Action.ERROR, "请求超时", None)
     except Exception as e:
-        logger.bind(tag=TAG).error(f"处理设置属性意图错误: {e}")
+        error_msg = f"执行Home Assistant操作失败"
+        logger.bind(tag=TAG).error(error_msg)
+        return ActionResponse(Action.ERROR, error_msg, None)
 
 
-async def handle_hass_set_state(conn, entity_id, state):
+def handle_hass_set_state(conn, entity_id, state):
     ha_config = initialize_hass_handler(conn)
     api_key = ha_config.get("api_key")
     base_url = ha_config.get("base_url")
@@ -151,7 +155,7 @@ async def handle_hass_set_state(conn, entity_id, state):
         if domain == "vacuum":
             action = "start"
     else:
-        return f"{domain} {state.type}功能尚未支持"
+        return f"{domain} {state['type']}功能尚未支持"
 
     if arg == "":
         data = {
@@ -161,7 +165,7 @@ async def handle_hass_set_state(conn, entity_id, state):
         data = {"entity_id": entity_id, arg: value}
     url = f"{base_url}/api/services/{domain}/{action}"
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, json=data, timeout=5)  # 设置5秒超时
     logger.bind(tag=TAG).info(
         f"设置状态:{description},url:{url},return_code:{response.status_code}"
     )

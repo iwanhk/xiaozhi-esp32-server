@@ -8,6 +8,7 @@
     *   [3.1. `xiaozhi-server` (核心AI引擎 - Python实现)](#31-xiaozhi-server-核心ai引擎---python实现)
     *   [3.2. `manager-api` (管理后端 - Java Spring Boot实现)](#32-manager-api-管理后端---java-spring-boot实现)
     *   [3.3. `manager-web` (Web管理前端 - Vue.js实现)](#33-manager-web-web管理前端---vuejs实现)
+    *   [3.4. `manager-mobile` (移动管理端 - uni-app+Vue3实现)](#34-manager-mobile-移动管理端---uni-appvue3实现)
 4.  [数据流与交互机制](#4-数据流与交互机制)
 5.  [核心功能概要](#5-核心功能概要)
 6.  [部署与配置概述](#6-部署与配置概述)
@@ -58,6 +59,14 @@
     *   （潜在功能）监控系统运行状态、查看日志、进行故障排查等。
     *   与 `manager-api` 提供的所有后端管理功能进行全面的交互。
 
+5.  **`manager-mobile` (智控台移动版 - uni-app实现):**
+    这是一个基于uni-app v3 + Vue 3 + Vite的跨端移动管理端，支持App（Android & iOS）和微信小程序。其主要能力包括：
+    *   提供移动设备上的便捷管理界面，与manager-web功能类似但针对移动端进行了优化。
+    *   支持用户登录、设备管理、AI服务配置等核心功能。
+    *   跨平台适配，一套代码可同时运行在iOS、Android和微信小程序上。
+    *   基于alova + @alova/adapter-uniapp实现网络请求，与manager-api无缝集成。
+    *   使用pinia进行状态管理，确保数据一致性。
+
 **高层交互流程概述:**
 
 *   **语音交互主线:** **ESP32设备**捕捉到用户语音后，通过**WebSocket**将音频数据实时传输给**`xiaozhi-server`**。`xiaozhi-server`完成一系列AI处理（VAD、ASR、LLM交互、TTS）后，再通过WebSocket将合成的语音回复发送回ESP32设备进行播放。所有与语音直接相关的实时交互均在此链路完成。
@@ -71,6 +80,7 @@ xiaozhi-esp32-server
   ├─ xiaozhi-server 8000 端口 Python语言开发 负责与esp32通信
   ├─ manager-web 8001 端口 Node.js+Vue开发 负责提供控制台的web界面
   ├─ manager-api 8002 端口 Java语言开发 负责提供控制台的api
+  └─ manager-mobile 跨平台移动应用 uni-app+Vue3开发 负责提供移动版智控台管理
 ```
 
 ---
@@ -291,6 +301,68 @@ xiaozhi-esp32-server
         *   项目根目录下的 `.env` (以及 `.env.development`, `.env.production` 等) 文件用于定义环境变量。这些变量（例如 `VUE_APP_API_BASE_URL` 来指定 `manager-api` 的基础URL）可以在应用代码中通过 `process.env.VUE_APP_XXX` 的形式访问，从而允许为不同构建环境（开发、测试、生产）配置不同的参数。
 
 `manager-web` 通过这些技术的综合运用，构建了一个功能强大、易于维护且用户体验良好的管理界面，为 `xiaozhi-esp32-server` 系统的配置和监控提供了坚实的前端支持。
+
+---
+
+### 3.4. `manager-mobile` (智控台移动版 - uni-app实现)
+
+`manager-mobile` 组件是一个基于uni-app v3 + Vue 3 + Vite的跨端移动管理端，支持App（Android & iOS）和微信小程序。它为系统管理员提供了移动端的管理界面，使得管理操作更加便捷。
+
+*   **核心目标:**
+    *   提供移动设备上的便捷管理界面，与manager-web功能类似但针对移动端进行了优化。
+    *   支持用户登录、设备管理、AI服务配置等核心功能。
+    *   跨平台适配，一套代码可同时运行在iOS、Android和微信小程序上。
+    *   为移动用户提供流畅、高效的管理体验。
+
+*   **平台兼容性:**
+
+| H5 | iOS | Android | 微信小程序 |
+| -- | --- | ------- | ---------- | 
+| √  | √   | √       | √          | 
+
+*   **核心技术栈:**
+    *   **uni-app v3:** 一个使用Vue.js开发所有前端应用的框架，支持iOS、Android、H5、以及各种小程序。
+    *   **Vue 3:** 用于构建用户界面的渐进式框架，提供了更好的性能和新特性。
+    *   **Vite:** 下一代前端开发与构建工具，提供极速的开发体验。
+    *   **pnpm:** 快速、节省磁盘空间的包管理器。
+    *   **alova:** 轻量级、灵活的请求策略库，搭配@alova/adapter-uniapp适配uni-app环境。
+    *   **pinia:** Vue的状态管理库，替代Vuex，提供更简洁的API和更好的TypeScript支持。
+    *   **UnoCSS:** 具有高性能且极具灵活性的即时原子化CSS引擎。
+    *   **TypeScript:** 提供类型安全的开发体验。
+
+*   **关键实现细节:**
+
+    1.  **跨平台架构:**
+        *   基于uni-app框架，实现了一套代码多端运行的目标，大幅减少了开发和维护成本。
+        *   针对不同平台的特性和限制，通过条件编译进行平台特定的代码处理。
+
+    2.  **项目结构:**
+        *   **`src/App.vue`:** 应用的根组件，定义了全局的样式和配置。
+        *   **`src/main.ts`:** 应用的入口文件，负责初始化Vue实例、注册插件和路由拦截器。
+        *   **`src/pages/`:** 存放应用的页面组件，如登录页、设备管理页等。
+        *   **`src/layouts/`:** 定义应用的布局组件，如默认布局、带tabbar的布局等。
+        *   **`src/api/`:** 封装与后端API的通信逻辑。
+        *   **`src/store/`:** 使用pinia进行状态管理。
+        *   **`src/components/`:** 存放可复用的组件。
+        *   **`src/utils/`:** 提供通用的工具函数。
+
+    3.  **网络请求:**
+        *   基于alova + @alova/adapter-uniapp实现网络请求，统一处理请求头、认证、错误等。
+        *   请求地址和环境配置通过.env文件管理，支持不同环境的切换。
+
+    4.  **路由与鉴权:**
+        *   使用uni-app的路由系统，结合路由拦截器实现页面的登录验证和权限控制。
+        *   未登录用户访问需要认证的页面时，会被重定向到登录页。
+
+    5.  **状态管理:**
+        *   使用pinia管理应用状态，如用户信息、设备列表等。
+        *   通过pinia-plugin-persistedstate插件实现状态的持久化存储。
+
+    6.  **构建与发布:**
+        *   支持多种构建命令，如构建微信小程序、Android和iOS App等。
+        *   使用HBuilderX进行App的云打包，简化了打包流程。
+
+`manager-mobile` 通过这些技术的应用，为用户提供了一个功能完备、体验流畅的移动端管理工具，使得管理员可以随时随地进行系统管理和配置。
 
 ---
 

@@ -9,7 +9,7 @@ logger = setup_logging()
 class DefaultTTS(TTSProviderBase):
     def __init__(self, config, delete_audio_file=True):
         super().__init__(config, delete_audio_file)
-        self.output_dir = config.get("output_dir", "output")
+        self.output_dir = config.get("output_dir", "tmp")
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 

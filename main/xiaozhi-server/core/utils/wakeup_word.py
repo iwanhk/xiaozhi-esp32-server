@@ -55,7 +55,7 @@ class WakeupWordsConfig:
             return self._config_cache
 
         try:
-            with open(self.config_file, "a+") as f:
+            with open(self.config_file, "a+", encoding="utf-8") as f:
                 with FileLock(f, timeout=self._lock_timeout):
                     f.seek(0)
                     content = f.read()
@@ -73,7 +73,7 @@ class WakeupWordsConfig:
     def _save_config(self, config: Dict):
         """保存配置到文件，使用文件锁保护"""
         try:
-            with open(self.config_file, "w") as f:
+            with open(self.config_file, "w", encoding="utf-8") as f:
                 with FileLock(f, timeout=self._lock_timeout):
                     yaml.dump(config, f, allow_unicode=True)
                     self._config_cache = config

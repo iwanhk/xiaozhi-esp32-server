@@ -5,16 +5,19 @@ import statistics
 import base64
 from typing import Dict
 from tabulate import tabulate
-from config.settings import load_config
 from core.utils.vllm import create_instance
+from config.settings import load_config
 
 # 设置全局日志级别为WARNING，抑制INFO级别日志
 logging.basicConfig(level=logging.WARNING)
+
+description = "视觉识别模型性能测试"
 
 
 class AsyncVisionPerformanceTester:
     def __init__(self):
         self.config = load_config()
+
         self.test_images = [
             "../../docs/images/demo1.png",
             "../../docs/images/demo2.png",

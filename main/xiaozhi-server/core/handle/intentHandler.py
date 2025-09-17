@@ -1,23 +1,33 @@
 import json
-import asyncio
 import uuid
-from core.handle.sendAudioHandle import send_stt_message
-from core.handle.helloHandle import checkWakeupWords
-from core.utils.util import remove_punctuation_and_length
-from core.providers.tts.dto.dto import ContentType
+import asyncio
 from core.utils.dialogue import Message
-from core.providers.tools.device_mcp import call_mcp_tool
+from core.providers.tts.dto.dto import ContentType
+from core.handle.helloHandle import checkWakeupWords
 from plugins_func.register import Action, ActionResponse
-from loguru import logger
+from core.handle.sendAudioHandle import send_stt_message
+from core.utils.util import remove_punctuation_and_length
+from core.providers.tts.dto.dto import TTSMessageDTO, SentenceType
 
 TAG = __name__
 
 
 async def handle_user_intent(conn, text):
+    # 预处理输入文本，处理可能的JSON格式
+    try:
+        if text.strip().startswith('{') and text.strip().endswith('}'):
+            parsed_data = json.loads(text)
+            if isinstance(parsed_data, dict) and "content" in parsed_data:
+                text = parsed_data["content"]  # 提取content用于意图分析
+                conn.current_speaker = parsed_data.get("speaker")  # 保留说话人信息
+    except (json.JSONDecodeError, TypeError):
+        pass
+
     # 检查是否有明确的退出命令
-    filtered_text = remove_punctuation_and_length(text)[1]
+    _, filtered_text = remove_punctuation_and_length(text)
     if await check_direct_exit(conn, filtered_text):
         return True
+
     # 检查是否是唤醒词
     if await checkWakeupWords(conn, filtered_text):
         return True
@@ -29,6 +39,8 @@ async def handle_user_intent(conn, text):
     intent_result = await analyze_intent_with_llm(conn, text)
     if not intent_result:
         return False
+    # 会话开始时生成sentence_id
+    conn.sentence_id = str(uuid.uuid4().hex)
     # 处理各种意图
     return await process_intent_result(conn, intent_result, text)
 
@@ -79,10 +91,29 @@ async def process_intent_result(conn, intent_result, original_text):
             if function_name == "continue_chat":
                 return False
 
-            if function_name == "play_music":
-                funcItem = conn.func_handler.get_function(function_name)
-                if not funcItem:
-                    conn.func_handler.function_registry.register_function("play_music")
+            if function_name == "result_for_context":
+                await send_stt_message(conn, original_text)
+                conn.client_abort = False
+                
+                def process_context_result():
+                    conn.dialogue.put(Message(role="user", content=original_text))
+                    
+                    from core.utils.current_time import get_current_time_info
+
+                    current_time, today_date, today_weekday, lunar_date = get_current_time_info()
+                    
+                    # 构建带上下文的基础提示
+                    context_prompt = f"""当前时间：{current_time}
+                                        今天日期：{today_date} ({today_weekday})
+                                        今天农历：{lunar_date}
+
+                                        请根据以上信息回答用户的问题：{original_text}"""
+                    
+                    response = conn.intent.replyResult(context_prompt, original_text)
+                    speak_txt(conn, response)
+                
+                conn.executor.submit(process_context_result)
+                return True
 
             function_args = {}
             if "arguments" in intent_data["function_call"]:
@@ -158,5 +189,19 @@ async def process_intent_result(conn, intent_result, original_text):
 
 
 def speak_txt(conn, text):
+    conn.tts.tts_text_queue.put(
+        TTSMessageDTO(
+            sentence_id=conn.sentence_id,
+            sentence_type=SentenceType.FIRST,
+            content_type=ContentType.ACTION,
+        )
+    )
     conn.tts.tts_one_sentence(conn, ContentType.TEXT, content_detail=text)
+    conn.tts.tts_text_queue.put(
+        TTSMessageDTO(
+            sentence_id=conn.sentence_id,
+            sentence_type=SentenceType.LAST,
+            content_type=ContentType.ACTION,
+        )
+    )
     conn.dialogue.put(Message(role="assistant", content=text))

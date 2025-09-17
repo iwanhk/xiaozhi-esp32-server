@@ -1,9 +1,10 @@
-import queue
-import asyncio
-import traceback
-import aiohttp
-import requests
+import os
 import time
+import queue
+import aiohttp
+import asyncio
+import requests
+import traceback
 from config.logger import setup_logging
 from core.utils.tts import MarkdownCleaner
 from core.providers.tts.base import TTSProviderBase
@@ -23,22 +24,14 @@ class TTSProvider(TTSProviderBase):
         self.api_url = config.get("api_url")
         self.audio_format = "pcm"
         self.before_stop_play_files = []
-        self.segment_count = 0  # 添加片段计数器
 
         # 创建Opus编码器
         self.opus_encoder = opus_encoder_utils.OpusEncoderUtils(
             sample_rate=16000, channels=1, frame_size_ms=60
         )
 
-        # 添加文本缓冲区
-        self.text_buffer = ""
-
         # PCM缓冲区
         self.pcm_buffer = bytearray()
-
-    ###################################################################################
-    # linkerai单流式TTS重写父类的方法--开始
-    ###################################################################################
 
     def tts_text_priority_thread(self):
         """流式文本处理线程"""
@@ -50,8 +43,6 @@ class TTSProvider(TTSProviderBase):
                     self.tts_stop_request = False
                     self.processed_chars = 0
                     self.tts_text_buff = []
-                    self.segment_count = 0
-                    self.tts_audio_first_sentence = True
                     self.before_stop_play_files.clear()
                 elif ContentType.TEXT == message.content_type:
                     self.tts_text_buff.append(message.content_detail)
@@ -63,13 +54,12 @@ class TTSProvider(TTSProviderBase):
                     logger.bind(tag=TAG).info(
                         f"添加音频文件到待播放列表: {message.content_file}"
                     )
-                    self.before_stop_play_files.append(
-                        (message.content_file, message.content_detail)
-                    )
-
+                    if message.content_file and os.path.exists(message.content_file):
+                        # 先处理文件音频数据
+                        self._process_audio_file_stream(message.content_file, callback=lambda audio_data: self.handle_audio_file(audio_data, message.content_detail))
                 if message.sentence_type == SentenceType.LAST:
                     # 处理剩余的文本
-                    self._process_remaining_text(True)
+                    self._process_remaining_text_stream(True)
 
             except queue.Empty:
                 continue
@@ -78,7 +68,7 @@ class TTSProvider(TTSProviderBase):
                     f"处理TTS文本失败: {str(e)}, 类型: {type(e).__name__}, 堆栈: {traceback.format_exc()}"
                 )
 
-    def _process_remaining_text(self, is_last=False):
+    def _process_remaining_text_stream(self, is_last=False):
         """处理剩余的文本并生成语音
 
         Returns:
@@ -120,10 +110,6 @@ class TTSProvider(TTSProviderBase):
             logger.bind(tag=TAG).error(f"Failed to generate TTS file: {e}")
         finally:
             return None
-
-    ###################################################################################
-    # linkerai单流式TTS重写父类的方法--结束
-    ###################################################################################
 
     async def text_to_speak(self, text, is_last):
         """流式处理TTS音频，每句只推送一次音频列表"""
@@ -173,8 +159,6 @@ class TTSProvider(TTSProviderBase):
                         return
 
                     self.pcm_buffer.clear()
-                    opus_datas_cache = []
-
                     self.tts_audio_queue.put((SentenceType.FIRST, [], text))
 
                     # 兼容 iter_chunked / iter_chunks / iter_any
@@ -191,40 +175,20 @@ class TTSProvider(TTSProviderBase):
                             frame = bytes(self.pcm_buffer[:frame_bytes])
                             del self.pcm_buffer[:frame_bytes]
 
-                            opus = self.opus_encoder.encode_pcm_to_opus(
-                                frame, end_of_stream=False
+                            self.opus_encoder.encode_pcm_to_opus_stream(
+                                frame,
+                                end_of_stream=False,
+                                callback=self.handle_opus
                             )
-                            if opus:
-                                if self.segment_count < 10:  # 前10个片段直接发送
-                                    self.tts_audio_queue.put(
-                                        (SentenceType.MIDDLE, opus, None)
-                                    )
-                                    self.segment_count += 1
-                                else:
-                                    opus_datas_cache.extend(opus)
 
                     # flush 剩余不足一帧的数据
                     if self.pcm_buffer:
-                        opus = self.opus_encoder.encode_pcm_to_opus(
-                            bytes(self.pcm_buffer), end_of_stream=True
+                        self.opus_encoder.encode_pcm_to_opus_stream(
+                            bytes(self.pcm_buffer),
+                            end_of_stream=True,
+                            callback=self.handle_opus
                         )
-                        if opus:
-                            if self.segment_count < 10:  # 前10个片段直接发送
-                                # 直接发送
-                                self.tts_audio_queue.put(
-                                    (SentenceType.MIDDLE, opus, None)
-                                )
-                                self.segment_count += 1
-                            else:
-                                # 后续片段缓存
-                                opus_datas_cache.extend(opus)
                         self.pcm_buffer.clear()
-
-                    # 如果不是前10个片段，发送缓存的数据
-                    if self.segment_count >= 10 and opus_datas_cache:
-                        self.tts_audio_queue.put(
-                            (SentenceType.MIDDLE, opus_datas_cache, None)
-                        )
 
                     # 如果是最后一段，输出音频获取完毕
                     if is_last:
@@ -236,10 +200,8 @@ class TTSProvider(TTSProviderBase):
 
     def to_tts(self, text: str) -> list:
         """非流式TTS处理，用于测试及保存音频文件的场景
-
         Args:
             text: 要转换的文本
-
         Returns:
             list: 返回opus编码后的音频数据列表
         """
@@ -292,11 +254,11 @@ class TTSProvider(TTSProviderBase):
                         # 最后一帧可能不足，用0填充
                         frame = frame + b"\x00" * (frame_bytes - len(frame))
 
-                    opus = self.opus_encoder.encode_pcm_to_opus(
-                        frame, end_of_stream=(i + frame_bytes >= len(pcm_data))
+                    self.opus_encoder.encode_pcm_to_opus_stream(
+                        frame,
+                        end_of_stream=(i + frame_bytes >= len(pcm_data)),
+                        callback=lambda opus: opus_datas.append(opus)
                     )
-                    if opus:
-                        opus_datas.extend(opus)
 
                 return opus_datas
 

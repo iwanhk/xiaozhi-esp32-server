@@ -7,7 +7,34 @@ docker镜像已支持x86架构、arm64架构的CPU，支持在国产操作系统
 
 如果您的电脑还没安装docker，可以按照这里的教程安装：[docker安装](https://www.runoob.com/docker/ubuntu-docker-install.html)
 
-#### 1.1 创建目录
+docker 安装全模块有两种方式，你可以[使用懒人脚本](./Deployment_all.md#11-懒人脚本)（作者[@VanillaNahida](https://github.com/VanillaNahida)）  
+脚本会自动帮你下载所需的文件和配置文件，你也可以使用[手动部署](./Deployment_all.md#12-手动部署)从零搭建。
+
+
+
+### 1.1 懒人脚本
+部署简便，可以参考[视频教程](https://www.bilibili.com/video/BV17bbvzHExd/) ，文字版教程如下：
+> [!NOTE]  
+> 暂且只支持Ubuntu服务器一键部署，其他系统未尝试，可能会有一些奇怪的bug
+
+使用SSH工具连接到服务器，以root权限执行如下脚本
+```bash
+sudo bash -c "$(wget -qO- https://ghfast.top/https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/main/docker-setup.sh)"
+```
+
+脚本会自动完成以下操作：
+> 1. 安装Docker
+> 2. 配置镜像源
+> 3. 下载/拉取镜像
+> 4. 下载语音识别模型文件
+> 5. 引导配置服务端
+>
+
+执行完成后简单配置后，再参照[4. 运行程序](#4. 运行程序)和[5.重启xiaozhi-esp32-server](#5.重启xiaozhi-esp32-server)里提到的最重要的3件事情，完成3这三项配置后即可使用。
+
+### 1.2 手动部署
+
+#### 1.2.1 创建目录
 
 安装完后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xiaozhi-server`。
 
@@ -22,22 +49,22 @@ xiaozhi-server
      ├─ SenseVoiceSmall
 ```
 
-#### 1.2 下载语音识别模型文件
+#### 1.2.2 下载语音识别模型文件
 
 本项目语音识别模型，默认使用`SenseVoiceSmall`模型，进行语音转文字。因为模型较大，需要独立下载，下载后把`model.pt`
 文件放在`models/SenseVoiceSmall`
 目录下。下面两个下载路线任选一个。
 
-- 线路一：阿里魔塔下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
+- 线路一：阿里魔搭下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
 - 线路二：百度网盘下载[SenseVoiceSmall](https://pan.baidu.com/share/init?surl=QlgM58FHhYv1tFnUT_A8Sg&pwd=qvna) 提取码:
   `qvna`
 
 
-#### 1.3 下载配置文件
+#### 1.2.3 下载配置文件
 
 你需要下载两个配置文件：`docker-compose_all.yaml` 和 `config_from_api.yaml`。需要从项目仓库下载这两个文件。
 
-##### 1.3.1 下载 docker-compose_all.yaml
+##### 1.2.3.1 下载 docker-compose_all.yaml
 
 用浏览器打开[这个链接](../main/xiaozhi-server/docker-compose_all.yml)。
 
@@ -48,7 +75,7 @@ xiaozhi-server
 
 下载完后，回到本教程继续往下。
 
-##### 1.3.2 下载 config_from_api.yaml
+##### 1.2.3.2 下载 config_from_api.yaml
 
 用浏览器打开[这个链接](../main/xiaozhi-server/config_from_api.yaml)。
 
@@ -179,12 +206,12 @@ docker logs -f xiaozhi-esp32-server
 
 OTA接口：
 ```
-http://你电脑局域网的ip:8002/xiaozhi/ota/
+http://你宿主机局域网的ip:8002/xiaozhi/ota/
 ```
 
 Websocket接口：
 ```
-ws://你电脑局域网的ip:8000/xiaozhi/v1/
+ws://你宿主机的ip:8000/xiaozhi/v1/
 ```
 
 ### 第三件重要的事情
@@ -358,7 +385,7 @@ pip install -r requirements.txt
 文件放在`models/SenseVoiceSmall`
 目录下。下面两个下载路线任选一个。
 
-- 线路一：阿里魔塔下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
+- 线路一：阿里魔搭下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
 - 线路二：百度网盘下载[SenseVoiceSmall](https://pan.baidu.com/share/init?surl=QlgM58FHhYv1tFnUT_A8Sg&pwd=qvna) 提取码:
   `qvna`
 
@@ -431,19 +458,30 @@ ws://你电脑局域网的ip:8000/xiaozhi/v1/
 2、 [基于虾哥编译好的固件配置自定义服务器](firmware-setting.md)了。
 
 # 常见问题
-
 以下是一些常见问题，供参考：
 
-[1、为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)
-
-[2、为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)
-
-[3、TTS 经常失败，经常超时](./FAQ.md)
-
-[4、使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)
-
-[5、如何提高小智对话响应速度？](./FAQ.md)
-
-[6、我说话很慢，停顿时小智老是抢话](./FAQ.md)
-
-[7、我想通过小智控制电灯、空调、远程开关机等操作](./FAQ.md)
+1、[为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)<br/>
+2、[为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)<br/>
+3、[TTS 经常失败，经常超时](./FAQ.md)<br/>
+4、[使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)<br/>
+5、[如何提高小智对话响应速度？](./FAQ.md)<br/>
+6、[我说话很慢，停顿时小智老是抢话](./FAQ.md)<br/>
+## 部署相关教程
+1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
+2、[如何与Nginx集成](https://github.com/xinnan-tech/xiaozhi-esp32-server/issues/791)<br/>
+## 拓展相关教程
+1、[如何开启手机号码注册智控台](./ali-sms-integration.md)<br/>
+2、[如何集成HomeAssistant实现智能家居控制](./homeassistant-integration.md)<br/>
+3、[如何开启视觉模型实现拍照识物](./mcp-vision-integration.md)<br/>
+4、[如何部署MCP接入点](./mcp-endpoint-enable.md)<br/>
+5、[如何接入MCP接入点](./mcp-endpoint-integration.md)<br/>
+6、[如何开启声纹识别](./voiceprint-integration.md)<br/>
+7、[新闻插件源配置指南](./newsnow_plugin_config.md)<br/>
+8、[天气插件使用指南](./weather-integration.md)<br/>
+## 语音克隆、本地语音部署相关教程
+1、[如何部署集成index-tts本地语音](./index-stream-integration.md)<br/>
+2、[如何部署集成fish-speech本地语音](./fish-speech-integration.md)<br/>
+3、[如何部署集成PaddleSpeech本地语音](./paddlespeech-deploy.md)<br/>
+## 性能测试教程
+1、[各组件速度测试指南](./performance_tester.md)<br/>
+2、[定期公开测试结果](https://github.com/xinnan-tech/xiaozhi-performance-research)<br/>

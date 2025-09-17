@@ -106,6 +106,22 @@ export default {
         });
       }).send();
   },
+  // 获取LLM模型名称列表
+  getLlmModelCodeList(modelName, callback) {
+    RequestService.sendRequest()
+      .url(`${getServiceUrl()}/models/llm/names`)
+      .method('GET')
+      .data({ modelName })
+      .success((res) => {
+        RequestService.clearRequestTime();
+        callback(res);
+      })
+      .networkFail(() => {
+        RequestService.reAjaxFun(() => {
+          this.getLlmModelCodeList(modelName, callback);
+        });
+      }).send();
+  },
   // 获取模型音色列表
   getModelVoices(modelId, voiceName, callback) {
     const queryParams = new URLSearchParams({

@@ -8,47 +8,13 @@ docker镜像已支持x86架构、arm64架构的CPU，支持在国产操作系统
 
 如果您的电脑还没安装docker，可以按照这里的教程安装：[docker安装](https://www.runoob.com/docker/ubuntu-docker-install.html)
 
-如果你已经安装好docker，你可以[1.1使用懒人脚本](#11-懒人脚本)自动帮你下载所需的文件和配置文件，你可以使用docker[1.2手动部署](#12-手动部署)。
+安装好docker后，进继续。
 
-### 1.1 懒人脚本
+### 1.1 手动部署
 
-你可以使用以下命令一键下载并执行部署脚本：
-请确保你的环境可以正常访问 GitHub 否则无法下载脚本。
-```bash
-curl -L -o docker-setup.sh https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/main/docker-setup.sh
-```
+#### 1.1.1 创建目录
 
-如果您的电脑是windows系统，请使用使用 Git Bash、WSL、PowerShell 或 CMD 运行以下命令：
-```bash
-# Git Bash 或 WSL
-sh docker-setup.sh
-# PowerShell 或 CMD
-.\docker-setup.sh
-```
-
-如果您的电脑是linux 或者 macos 系统，请使用终端运行以下命令：
-```bash
-chmod +x docker-setup.sh
-./docker-setup.sh
-```
-
-脚本会自动完成以下操作：
-> 1. 创建必要的目录结构
-> 2. 下载语音识别模型
-> 3. 下载配置文件
-> 4. 检查文件完整性
->
-> 执行完成后，请按照提示配置 API 密钥。
-
-当你一切顺利完成以上操作后，继续操作[配置项目文件](#2-配置项目文件)
-
-### 1.2 手动部署
-
-如果懒人脚本无法正常运行，请按本章节1.2进行手动部署。
-
-#### 1.2.1 创建目录
-
-安装完后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xiaozhi-server`。
+安装完docker后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xiaozhi-server`。
 
 创建好目录后，你需要在`xiaozhi-server`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
 
@@ -61,18 +27,18 @@ xiaozhi-server
      ├─ SenseVoiceSmall
 ```
 
-#### 1.2.2 下载语音识别模型文件
+#### 1.1.2 下载语音识别模型文件
 
 你需要下载语音识别的模型文件，因为本项目的默认语音识别用的是本地离线语音识别方案。可通过这个方式下载
 [跳转到下载语音识别模型文件](#模型文件)
 
 下载完后，回到本教程。
 
-#### 1.2.3 下载配置文件
+#### 1.1.3 下载配置文件
 
 你需要下载两个配置文件：`docker-compose.yaml` 和 `config.yaml`。需要从项目仓库下载这两个文件。
 
-##### 1.2.3.1 下载 docker-compose.yaml
+##### 1.1.3.1 下载 docker-compose.yaml
 
 用浏览器打开[这个链接](../main/xiaozhi-server/docker-compose.yml)。
 
@@ -81,7 +47,7 @@ xiaozhi-server
 
 下载完后，回到本教程继续往下。
 
-##### 1.2.3.2 创建 config.yaml
+##### 1.1.3.2 创建 config.yaml
 
 用浏览器打开[这个链接](../main/xiaozhi-server/config.yaml)。
 
@@ -260,7 +226,7 @@ LLM:
 文件放在`models/SenseVoiceSmall`
 目录下。下面两个下载路线任选一个。
 
-- 线路一：阿里魔塔下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
+- 线路一：阿里魔搭下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
 - 线路二：百度网盘下载[SenseVoiceSmall](https://pan.baidu.com/share/init?surl=QlgM58FHhYv1tFnUT_A8Sg&pwd=qvna) 提取码:
   `qvna`
 
@@ -290,19 +256,30 @@ LLM:
 
 2、 [基于虾哥编译好的固件配置自定义服务器](firmware-setting.md)了。
 
-
+# 常见问题
 以下是一些常见问题，供参考：
 
-[1、为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)
-
-[2、为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)
-
-[3、TTS 经常失败，经常超时](./FAQ.md)
-
-[4、使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)
-
-[5、如何提高小智对话响应速度？](./FAQ.md)
-
-[6、我说话很慢，停顿时小智老是抢话](./FAQ.md)
-
-[7、我想通过小智控制电灯、空调、远程开关机等操作](./FAQ.md)
+1、[为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)<br/>
+2、[为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)<br/>
+3、[TTS 经常失败，经常超时](./FAQ.md)<br/>
+4、[使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)<br/>
+5、[如何提高小智对话响应速度？](./FAQ.md)<br/>
+6、[我说话很慢，停顿时小智老是抢话](./FAQ.md)<br/>
+## 部署相关教程
+1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
+2、[如何与Nginx集成](https://github.com/xinnan-tech/xiaozhi-esp32-server/issues/791)<br/>
+## 拓展相关教程
+1、[如何开启手机号码注册智控台](./ali-sms-integration.md)<br/>
+2、[如何集成HomeAssistant实现智能家居控制](./homeassistant-integration.md)<br/>
+3、[如何开启视觉模型实现拍照识物](./mcp-vision-integration.md)<br/>
+4、[如何部署MCP接入点](./mcp-endpoint-enable.md)<br/>
+5、[如何接入MCP接入点](./mcp-endpoint-integration.md)<br/>
+6、[如何开启声纹识别](./voiceprint-integration.md)<br/>
+10、[新闻插件源配置指南](./newsnow_plugin_config.md)<br/>
+## 语音克隆、本地语音部署相关教程
+1、[如何部署集成index-tts本地语音](./index-stream-integration.md)<br/>
+2、[如何部署集成fish-speech本地语音](./fish-speech-integration.md)<br/>
+3、[如何部署集成PaddleSpeech本地语音](./paddlespeech-deploy.md)<br/>
+## 性能测试教程
+1、[各组件速度测试指南](./performance_tester.md)<br/>
+2、[定期公开测试结果](https://github.com/xinnan-tech/xiaozhi-performance-research)<br/>

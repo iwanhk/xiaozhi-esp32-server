@@ -5,12 +5,10 @@ Opus编码工具类
 
 import logging
 import traceback
-
 import numpy as np
-from typing import List, Optional
 from opuslib_next import Encoder
 from opuslib_next import constants
-
+from typing import Optional, Callable, Any
 
 class OpusEncoderUtils:
     """PCM到Opus的编码器"""
@@ -56,13 +54,14 @@ class OpusEncoderUtils:
         self.encoder.reset_state()
         self.buffer = np.array([], dtype=np.int16)
 
-    def encode_pcm_to_opus(self, pcm_data: bytes, end_of_stream: bool) -> List[bytes]:
+    def encode_pcm_to_opus_stream(self, pcm_data: bytes, end_of_stream: bool, callback: Callable[[Any], Any]):
         """
-        将PCM数据编码为Opus格式
+        将PCM数据编码为Opus格式，以流式方式进行处理
 
         Args:
             pcm_data: PCM字节数据
-            end_of_stream: 是否为流的结束
+            end_of_stream: 是否为流的结束,
+            callback: opus处理方法
 
         Returns:
             Opus数据包列表
@@ -76,7 +75,6 @@ class OpusEncoderUtils:
         # 将新数据追加到缓冲区
         self.buffer = np.append(self.buffer, new_samples)
 
-        opus_packets = []
         offset = 0
 
         # 处理所有完整帧
@@ -84,7 +82,7 @@ class OpusEncoderUtils:
             frame = self.buffer[offset : offset + self.total_frame_size]
             output = self._encode(frame)
             if output:
-                opus_packets.append(output)
+                callback(output)
             offset += self.total_frame_size
 
         # 保留未处理的样本
@@ -98,10 +96,8 @@ class OpusEncoderUtils:
 
             output = self._encode(last_frame)
             if output:
-                opus_packets.append(output)
+                callback(output)
             self.buffer = np.array([], dtype=np.int16)
-
-        return opus_packets
 
     def _encode(self, frame: np.ndarray) -> Optional[bytes]:
         """编码一帧音频数据"""

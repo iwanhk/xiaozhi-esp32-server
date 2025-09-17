@@ -4,15 +4,15 @@ import random
 import asyncio
 from core.utils.dialogue import Message
 from core.utils.util import audio_to_data
+from core.providers.tts.dto.dto import SentenceType
+from core.utils.wakeup_word import WakeupWordsConfig
 from core.handle.sendAudioHandle import sendAudioMessage, send_stt_message
 from core.utils.util import remove_punctuation_and_length, opus_datas_to_wav_bytes
-from core.providers.tts.dto.dto import ContentType, SentenceType
 from core.providers.tools.device_mcp import (
     MCPClient,
     send_mcp_initialize_message,
     send_mcp_tools_list_request,
 )
-from core.utils.wakeup_word import WakeupWordsConfig
 
 TAG = __name__
 
@@ -56,7 +56,16 @@ async def checkWakeupWords(conn, text):
         "enable_wakeup_words_response_cache"
     ]
 
-    if not enable_wakeup_words_response_cache or not conn.tts:
+    # 等待tts初始化，最多等待3秒
+    start_time = time.time()
+    while time.time() - start_time < 3:
+        if conn.tts:
+            break
+        await asyncio.sleep(0.1)
+    else:
+        return False
+
+    if not enable_wakeup_words_response_cache:
         return False
 
     _, filtered_text = remove_punctuation_and_length(text)
@@ -81,9 +90,10 @@ async def checkWakeupWords(conn, text):
             "text": "哈啰啊，我是小智啦，声音好听的台湾女孩一枚，超开心认识你耶，最近在忙啥，别忘了给我来点有趣的料哦，我超爱听八卦的啦",
         }
 
+    # 获取音频数据
+    opus_packets = audio_to_data(response.get("file_path"))
     # 播放唤醒词回复
     conn.client_abort = False
-    opus_packets, _ = audio_to_data(response.get("file_path"))
 
     conn.logger.bind(tag=TAG).info(f"播放唤醒词回复: {response.get('text')}")
     await sendAudioMessage(conn, SentenceType.FIRST, opus_packets, response.get("text"))
